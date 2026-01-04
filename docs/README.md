@@ -59,15 +59,6 @@ This document outlines the milestones for the Critter Counter project, providing
   1. Achieve comprehensive test coverage (>80%).
   2. Conduct code quality checks using linters and type checkers.
   3. Complete documentation for all modules.
-
-## Milestone 6: Deployment
-
-- **Objective:** Prepare the project for deployment.
-- **Steps:**
-  1. Perform final testing to ensure stability.
-  2. Package the project for deployment.
-  3. Develop deployment strategies and documentation.
-
 ---
 
 This README serves as a guide for the milestones in the Critter Counter project, ensuring a clear path from setup to deployment.

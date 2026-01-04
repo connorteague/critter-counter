@@ -51,3 +51,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.bak
+
+IMPLEMENTATION_STATUS.md
