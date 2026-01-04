@@ -2,6 +2,8 @@
 
 Solar-powered RFID livestock tracking system for Botswana cattle farmers.
 
+Hello !
+
 ## Project Overview
 
 This system helps farmers track cattle entering and exiting their kraals (livestock enclosures) using RFID technology. The goal is to prevent livestock loss to predators by providing accurate counts of cattle that haven't returned from daily grazing.
