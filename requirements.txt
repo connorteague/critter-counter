@@ -1,0 +1,11 @@
+# Production dependencies for Critter Counter
+
+# Flask for visual simulation web interface
+Flask>=3.0.0
+
+# For development without hardware
+# These may be removed or replaced with actual hardware libraries
+
+# Hardware dependencies (add when deploying to Raspberry Pi):
+# RPi.GPIO>=0.7.1
+# spidev>=3.6
