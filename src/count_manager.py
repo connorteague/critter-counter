@@ -59,7 +59,7 @@ class CountManager:
             counts_file: Path to JSON file for persistence
         """
         self.counts_file = counts_file
-        # TODO: Student implements loading from file
+        # TODO
         self.data = CountData()
 
     def add_entry(self, count: int = 1, tag_id: Optional[str] = None) -> None:
@@ -70,7 +70,7 @@ class CountManager:
             count: Number of cattle entering
             tag_id: Optional tag identifier to update occurrence
         """
-        # TODO: Student implements
+        # TODO
         # Hint: Increment daily_entry, net_count, and tag_occurrences[tag_id]
         pass
 
