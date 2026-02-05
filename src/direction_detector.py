@@ -7,7 +7,7 @@ Determines cattle movement direction (ENTRY/EXIT) based on RSSI signal trends.
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 
 class Direction(Enum):
@@ -45,14 +45,14 @@ class DirectionDetector:
 
     def __init__(self, min_samples: int = 3, rssi_delta_threshold: float = 5.0):
         """Initialize direction detector.
-        
+
         Args:
             min_samples: Minimum number of readings required for direction detection
             rssi_delta_threshold: Minimum RSSI change (dBm) to determine direction
         """
         self.min_samples = min_samples
         self.rssi_delta_threshold = rssi_delta_threshold
-        self._readings = {}  # Dict[str, List[RFIDReading]]
+        self._readings: Dict[str, List[RFIDReading]] = {}
 
     def add_reading(self, tag_id: str, rssi: float, timestamp: datetime = None) -> None:
         """
