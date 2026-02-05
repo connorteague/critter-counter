@@ -7,7 +7,7 @@ Determines cattle movement direction (ENTRY/EXIT) based on RSSI signal trends.
 from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 
 class Direction(Enum):
@@ -43,10 +43,16 @@ class DirectionDetector:
     See docs/algorithm_notes.md for details.
     """
 
-    def __init__(self):
-        """Initialize direction detector."""
-        # TODO: Implements data structure to track readings per tag
-        pass
+    def __init__(self, min_samples: int = 3, rssi_delta_threshold: float = 5.0):
+        """Initialize direction detector.
+
+        Args:
+            min_samples: Minimum number of readings required for direction detection
+            rssi_delta_threshold: Minimum RSSI change (dBm) to determine direction
+        """
+        self.min_samples = min_samples
+        self.rssi_delta_threshold = rssi_delta_threshold
+        self._readings: Dict[str, List[RFIDReading]] = {}
 
     def add_reading(self, tag_id: str, rssi: float, timestamp: datetime = None) -> None:
         """
@@ -57,8 +63,15 @@ class DirectionDetector:
             rssi: Signal strength in dBm
             timestamp: When reading was taken (defaults to now)
         """
-        # TODO: Implementation
-        pass
+        if timestamp is None:
+            timestamp = datetime.now()
+
+        reading = RFIDReading(tag_id=tag_id, rssi=rssi, timestamp=timestamp)
+
+        if tag_id not in self._readings:
+            self._readings[tag_id] = []
+
+        self._readings[tag_id].append(reading)
 
     def detect_direction(self, tag_id: str) -> Direction:
         """
@@ -70,9 +83,24 @@ class DirectionDetector:
         Returns:
             Direction: ENTRY if signal strengthening, EXIT if weakening, UNKNOWN otherwise
         """
-        # TODO: Implementation
-        # Hint: Compare first_rssi vs last_rssi, check delta threshold
-        return Direction.UNKNOWN
+        # Get readings for this tag
+        readings = self._readings.get(tag_id, [])
+
+        # Need minimum samples to determine direction
+        if len(readings) < self.min_samples:
+            return Direction.UNKNOWN
+
+        # Calculate RSSI delta (last - first)
+        rssi_delta = readings[-1].rssi - readings[0].rssi
+
+        # Check if change is significant enough
+        if abs(rssi_delta) < self.rssi_delta_threshold:
+            return Direction.UNKNOWN
+
+        # Determine direction based on trend
+        if rssi_delta > 0:
+            return Direction.ENTRY  # Signal getting stronger (approaching)
+        return Direction.EXIT  # Signal getting weaker (departing)
 
     def get_readings(self, tag_id: str) -> List[RFIDReading]:
         """
@@ -84,8 +112,7 @@ class DirectionDetector:
         Returns:
             List of RFIDReading objects
         """
-        # TODO: Implementation
-        return []
+        return self._readings.get(tag_id, [])
 
     def clear_tag(self, tag_id: str) -> None:
         """
@@ -94,10 +121,9 @@ class DirectionDetector:
         Args:
             tag_id: Tag to clear
         """
-        # TODO: Implementation
-        pass
+        if tag_id in self._readings:
+            del self._readings[tag_id]
 
     def clear_all(self) -> None:
         """Clear all stored readings."""
-        # TODO: Implementation
-        pass
+        self._readings.clear()
