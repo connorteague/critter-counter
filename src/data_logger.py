@@ -60,8 +60,20 @@ class DataLogger:
         Args:
             log_file: Path to CSV file for event logging
         """
-        self.log_file = log_file
-        # TODO: create file with headers
+        # Create folder if it's missing
+        self.log_file = Path(log_file)
+        self.log_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        #File Headers
+        self.fieldnames = [
+            "timestamp", "motion_start", "motion_end", "tag_id",
+            "direction", "rssi", "occurrence_count", "event_type"
+        ]
+        if not self.log_file.exists():
+            with open(self.log_file, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=self.fieldnames)
+                writer.writeheader()
+
 
     def log_motion_start(self, timestamp: Optional[datetime] = None) -> None:
         """
@@ -70,6 +82,9 @@ class DataLogger:
         Args:
             timestamp: When motion started (defaults to now)
         """
+        event = CattleEvent(
+            timestamp=timestamp or datetime.now(), event_type="motion_start")
+        self._write_event(event)
         # TODO: Log the motion event
         pass
 
@@ -80,6 +95,9 @@ class DataLogger:
         Args:
             timestamp: When motion ended (defaults to now)
         """
+        event = CattleEvent(
+            timestamp=timestamp or datetime.now(), event_type="motion_end")
+        self._write_event(event)
         # TODO: Log when motion has ended
         pass
 
@@ -90,7 +108,12 @@ class DataLogger:
         Args:
             timestamp: When timeout occurred (defaults to now)
         """
-        # TODO: Log when lotion has timed out
+        event = CattleEvent(
+            timestamp=timestamp or datetime.now(),
+            event_type="motion_timeout"
+        )
+        self._write_event(event)
+        # TODO: Log when motion has timed out
         pass
 
     def log_tag_detection(
@@ -115,6 +138,18 @@ class DataLogger:
             motion_end: When motion event ended
             timestamp: When tag was detected (defaults to now)
         """
+        # Create event with all data
+        event = CattleEvent(
+            timestamp=timestamp or datetime.now(),
+            event_type="tag_detection",
+            motion_start=motion_start,
+            motion_end=motion_end,
+            tag_id=tag_id,
+            direction=direction,
+            rssi=rssi,
+            occurrence_count=occurrence_count
+        )
+        self._write_event(event)
         # TODO: Log the tag that has been detected and all relevant data
         pass
 
@@ -128,17 +163,61 @@ class DataLogger:
         Returns:
             List of CattleEvent objects (newest first)
         """
-        # TODO: Read CSV to return last n events
-        # Hint: Read CSV, parse rows, return last N events
-        return []
+        if not self.log_file.exists():
+            return []
+
+        all_rows = []
+        with open(self.log_file, 'r', newline='') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                # Parse each row into a CattleEvent
+                event = CattleEvent(
+                    timestamp=datetime.fromisoformat(row["timestamp"]) if row["timestamp"] else None,
+                    event_type=row["event_type"],
+                    motion_start=datetime.fromisoformat(row["motion_start"]) if row["motion_start"] else None,
+                    motion_end=datetime.fromisoformat(row["motion_end"]) if row["motion_end"] else None,
+                    tag_id=row["tag_id"] if row["tag_id"] else None,
+                    direction=row["direction"] if row["direction"] else None,
+                    rssi=float(row["rssi"]) if row["rssi"] else None,
+                    occurrence_count=int(row["occurrence_count"]) if row["occurrence_count"] else None
+                )
+                all_rows.append(event)
+
+        # Grab the last 'n' events, newest first
+        return all_rows[-n:][::-1]
+    
+    def get_stats(self) -> dict:
+        """
+        Calculates statistics based on the log file.
+        """
+        # 1. Get the events
+        events = self.get_recent_events(n=10000)
+
+        # 2. Build the dictionary that the test expects
+        stats = {
+            'total_events': len(events),
+        }
+
+        return stats
 
     def _write_event(self, event: CattleEvent) -> None:
-        """
-        Write event to CSV file.
+        # 2. Open file in append mode
+        with open(self.log_file, mode='a', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=self.fieldnames)
 
-        Args:
-            event: Event to write
-        """
+        # 3. Create a dictionary from the dataclass
+            row = {
+                "timestamp": event.timestamp.isoformat(),
+                "motion_start": event.motion_start.isoformat() if event.motion_start else "",
+                "motion_end": event.motion_end.isoformat() if event.motion_end else "",
+                "tag_id": event.tag_id or "",
+                "direction": event.direction or "",
+                "rssi": event.rssi if event.rssi is not None else "",
+                "occurrence_count": event.occurrence_count if event.occurrence_count is not None else "",
+                "event_type": event.event_type
+        }
+
+            writer.writerow(row)
         # TODO: Write new event to CSV file
         # Hint: Use csv.DictWriter to append row
         pass

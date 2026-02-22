@@ -33,7 +33,7 @@ class SimulationState:
         # Initialize student's stub classes
         self.direction_detector = DirectionDetector()
         self.count_manager = CountManager()
-        self.data_logger = DataLogger()
+        self.counts_logger = DataLogger()
 
         # Initialize mock hardware with logging callbacks
         self.motion_sensor = MockMotionSensor(pin=17, log_callback=self.hardware_log)

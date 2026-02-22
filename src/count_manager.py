@@ -8,7 +8,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
+from datetime import datetime
 import json
+import os
 
 
 @dataclass
@@ -59,8 +61,8 @@ class CountManager:
             counts_file: Path to JSON file for persistence
         """
         self.counts_file = counts_file
-        # TODO
-        self.data = CountData()
+        self.counts = CountData()
+        self._load()
 
     def add_entry(self, count: int = 1, tag_id: Optional[str] = None) -> None:
         """
@@ -70,7 +72,12 @@ class CountManager:
             count: Number of cattle entering
             tag_id: Optional tag identifier to update occurrence
         """
-        # TODO
+        self.counts.daily_entry += count
+        self.counts.net_count = self.counts.daily_entry - self.counts.daily_exit
+        if tag_id:
+            current_occurrence = self.get_tag_occurrence_count(tag_id)
+            self.counts.tag_occurrences[tag_id] = current_occurrence + count
+        self._save()
         # Hint: Increment daily_entry, net_count, and tag_occurrences[tag_id]
         pass
 
@@ -82,7 +89,13 @@ class CountManager:
             count: Number of cattle exiting
             tag_id: Optional tag identifier to update occurrence
         """
-        # TODO: Student implements
+
+        self.counts.daily_exit += count
+        self.counts.net_count = self.counts.daily_entry - self.counts.daily_exit
+        if tag_id:
+            current_occurrence = self.get_tag_occurrence_count(tag_id)
+            self.counts.tag_occurrences[tag_id] = current_occurrence + count
+        self._save()
         # Hint: Increment daily_exit, decrement net_count, and tag_occurrences[tag_id]
         pass
 
@@ -96,8 +109,7 @@ class CountManager:
         Returns:
             Number of times tag has been seen
         """
-        # TODO: Student implements
-        return 0
+        return self.counts.tag_occurrences.get(tag_id, 0)
 
     def get_all_tag_occurrences(self) -> Dict[str, int]:
         """
@@ -106,17 +118,26 @@ class CountManager:
         Returns:
             Dictionary of tag_id -> count
         """
-        # TODO: Student implements
-        return {}
+    
+        return self.counts.tag_occurrences
 
     def reset_daily_counts(self) -> None:
         """Reset daily entry/exit counts, preserve tag occurrences."""
-        # TODO: Student implements
+        self.counts.daily_entry = 0
+        self.counts.daily_exit = 0
+        self.counts.net_count = 0
+        self.counts.last_reset = datetime.now()
+        self._save()
         # Hint: Reset daily_entry, daily_exit, net_count to 0
         # IMPORTANT: Do NOT reset tag_occurrences!
         pass
 
     def manual_reset(self) -> None:
+        self.counts.daily_entry = 0
+        self.counts.daily_exit = 0
+        self.counts.net_count = 0
+        self.counts.tag_occurrences = {}
+        self.counts.last_reset = datetime.now()
         """Reset everything including tag occurrences."""
         # TODO: Student implements
         # Hint: Reset all fields to defaults
@@ -124,9 +145,22 @@ class CountManager:
 
     def _save(self) -> None:
         """Save counts to JSON file atomically."""
-        # TODO: Student implements
-        # Hint: Write to temp file, then rename for atomic operation
-        pass
+        data = {
+            "daily_entry": self.counts.daily_entry,
+            "daily_exit": self.counts.daily_exit,
+            "last_reset": self.counts.last_reset.isoformat() if self.counts.last_reset else None,
+            "total_events": self.counts.total_events,
+            "tag_occurrences": self.counts.tag_occurrences,
+        }
+        temp_file = self.counts_file.with_suffix(".tmp")
+        try:
+            with open(temp_file, "w") as f:
+                json.dump(data, f, indent=4)
+            temp_file.replace(self.counts_file)
+        except Exception as e:
+            if temp_file.exists():
+                temp_file.unlink()  # Clean up the failed temp file
+            print(f"Error saving count data: {e}")
 
     def _load(self) -> None:
         """Load counts from JSON file."""
