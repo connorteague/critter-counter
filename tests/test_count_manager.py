@@ -10,8 +10,8 @@ import os
 import json
 from datetime import datetime, timedelta
 
-# TODO: Uncomment once count_manager.py is implemented
-# from src.count_manager import CountManager, CountData
+# TODO: Uncomment once count_manager.py is implemented 
+from src.count_manager import CountManager, CountData
 
 
 class TestCountData:
@@ -55,6 +55,24 @@ class TestCountData:
 class TestCountManager:
     """Tests for CountManager class."""
 
+    #@pytest.mark.skip(reason="Waiting for count_manager.py implementation")
+    def test_get_tag_occurrence_count(self):
+        """Test get_tag_occurrence_count method."""
+        manager = CountManager()
+        manager.counts.tag_occurrences = {'tag1': 3, 'tag2': 5}
+        assert manager.get_tag_occurrence_count('tag1') == 3
+        assert manager.get_tag_occurrence_count('tag2') == 5
+        assert manager.get_tag_occurrence_count('tag5') == 0 # Not present
+        pass
+
+    def test_get_all_tag_occurrences(self):
+        """Test get_all_tag_occurrences method."""
+        manager = CountManager()
+        manager.counts.tag_occurrences = {'tagA': 2, 'tagB': 4}
+        occurrences = manager.get_all_tag_occurrences()
+        assert occurrences == {'tagA': 2, 'tagB': 4}
+        pass
+
     @pytest.mark.skip(reason="Waiting for count_manager.py implementation")
     def test_initialization(self, temp_counts_file):
         """Test CountManager initializes correctly."""
@@ -64,34 +82,33 @@ class TestCountManager:
         # assert manager.counts is not None
         pass
 
-    @pytest.mark.skip(reason="Waiting for count_manager.py implementation")
+
     def test_add_entry(self, temp_counts_file):
         """Test adding entry increments counts correctly."""
-        # manager = CountManager()
+        manager = CountManager()
         # manager.PERSISTENCE_FILE = temp_counts_file
-        #
-        # manager.add_entry(1)
-        # assert manager.counts.daily_entry == 1
-        # assert manager.counts.net_count == 1
-        #
-        # manager.add_entry(3)  # Multiple cattle
-        # assert manager.counts.daily_entry == 4
-        # assert manager.counts.net_count == 4
+        manager.add_entry(1, tag_id="COW_01")
+        assert manager.counts.daily_entry == 1
+        assert manager.counts.net_count == 1
+        manager.add_entry(3,tag_id="COW_01")
+        assert manager.counts.daily_entry == 4
+        assert manager.counts.net_count == 4
+        assert manager.get_tag_occurrence_count("COW_01") == 4 #Tests if occurance increments
         pass
 
-    @pytest.mark.skip(reason="Waiting for count_manager.py implementation")
+   # @pytest.mark.skip(reason="Waiting for count_manager.py implementation")
     def test_add_exit(self, temp_counts_file):
         """Test adding exit increments counts correctly."""
-        # manager = CountManager()
+        manager = CountManager()
         # manager.PERSISTENCE_FILE = temp_counts_file
         #
-        # manager.add_exit(1)
-        # assert manager.counts.daily_exit == 1
-        # assert manager.counts.net_count == -1
+        manager.add_exit(1)
+        assert manager.counts.daily_exit == 1
+        assert manager.counts.net_count == -1
         #
-        # manager.add_exit(2)
-        # assert manager.counts.daily_exit == 3
-        # assert manager.counts.net_count == -3
+        manager.add_exit(2)
+        assert manager.counts.daily_exit == 3
+        assert manager.counts.net_count == -3
         pass
 
     @pytest.mark.skip(reason="Waiting for count_manager.py implementation")

@@ -11,6 +11,10 @@ Usage:
     python simulate.py --help             # Show all options
 """
 
+from data_logger import DataLogger
+from count_manager import CountManager
+from direction_detector import DirectionDetector, Direction
+from hardware.mocks import MockMotionSensor, MockRFIDReader
 import argparse
 import time
 import sys
@@ -19,11 +23,6 @@ from pathlib import Path
 
 # Add src to path (go up to project root, then into src)
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-from hardware.mocks import MockMotionSensor, MockRFIDReader
-from direction_detector import DirectionDetector, Direction
-from count_manager import CountManager
-from data_logger import DataLogger
 
 
 class CattleSimulator:
@@ -44,8 +43,10 @@ class CattleSimulator:
         self.counts_logger = DataLogger()
 
         # Initialize mock hardware with logging callbacks
-        self.motion_sensor = MockMotionSensor(pin=17, log_callback=self.hardware_log)
-        self.rfid_reader = MockRFIDReader(power_pin=22, log_callback=self.hardware_log)
+        self.motion_sensor = MockMotionSensor(
+            pin=17, log_callback=self.hardware_log)
+        self.rfid_reader = MockRFIDReader(
+            power_pin=22, log_callback=self.hardware_log)
 
     def hardware_log(self, device_id: str, message: str, level: str = "INFO"):
         """Callback for hardware device logging."""
@@ -73,7 +74,8 @@ class CattleSimulator:
             end_rssi=-45.0
         )
 
-        self.log(f"Generated {len(sequence)} RSSI readings (signal strengthening)", "SCENARIO")
+        self.log(
+            f"Generated {len(sequence)} RSSI readings (signal strengthening)", "SCENARIO")
 
         # Clear detector for new event
         self.direction_detector.clear_all()
@@ -103,7 +105,8 @@ class CattleSimulator:
                     # Hardware already logged the tag detection
                     all_readings.append(r)
                     # Add reading to student's direction detector
-                    self.direction_detector.add_reading(r.tag_id, r.rssi, r.timestamp)
+                    self.direction_detector.add_reading(
+                        r.tag_id, r.rssi, r.timestamp)
 
             scan_count += 1
             time.sleep(0.5)
@@ -119,8 +122,11 @@ class CattleSimulator:
         self.rfid_reader.power_off()
 
         # Process readings using student's stub classes
-        self._process_tags(all_readings, motion_start, motion_end, expected="ENTRY")
+        self._process_tags(all_readings, motion_start,
+                           motion_end, expected="ENTRY")
         print()
+
+
 
     def _process_tags(self, readings, motion_start, motion_end, expected=None):
         """Process tag readings using student's stub classes."""
@@ -157,7 +163,8 @@ class CattleSimulator:
                 delta = 0.0
 
             self.log(f"Tag {tag_id[:16]}...", "RESULT")
-            self.log(f"  RSSI: {first_rssi:.1f} → {last_rssi:.1f} dBm (Δ {delta:+.1f})", "RESULT")
+            self.log(
+                f"  RSSI: {first_rssi:.1f} → {last_rssi:.1f} dBm (Δ {delta:+.1f})", "RESULT")
 
             # Update counts using student's CountManager (stub does nothing until implemented)
             if direction == Direction.ENTRY:
@@ -184,8 +191,10 @@ class CattleSimulator:
                 motion_end=motion_end
             )
 
-            self.log(f"  Direction: {direction_str} (from student's DirectionDetector)", "RESULT")
-            self.log(f"  Occurrence: {occurrence} (from student's CountManager)", "RESULT")
+            self.log(
+                f"  Direction: {direction_str} (from student's DirectionDetector)", "RESULT")
+            self.log(
+                f"  Occurrence: {occurrence} (from student's CountManager)", "RESULT")
 
         # Show current counts
         count_data = self.count_manager.counts
@@ -212,7 +221,8 @@ class CattleSimulator:
             end_rssi=-70.0
         )
 
-        self.log(f"Generated {len(sequence)} RSSI readings (signal weakening)", "SCENARIO")
+        self.log(
+            f"Generated {len(sequence)} RSSI readings (signal weakening)", "SCENARIO")
 
         # Clear detector for new event
         self.direction_detector.clear_all()
@@ -239,7 +249,8 @@ class CattleSimulator:
                     # Hardware already logged the tag detection
                     all_readings.append(r)
                     # Add reading to student's direction detector
-                    self.direction_detector.add_reading(r.tag_id, r.rssi, r.timestamp)
+                    self.direction_detector.add_reading(
+                        r.tag_id, r.rssi, r.timestamp)
 
             scan_count += 1
             time.sleep(0.5)
@@ -255,7 +266,8 @@ class CattleSimulator:
         self.rfid_reader.power_off()
 
         # Process readings using student's stub classes
-        self._process_tags(all_readings, motion_start, motion_end, expected="EXIT")
+        self._process_tags(all_readings, motion_start,
+                           motion_end, expected="EXIT")
         print()
 
     def simulate_multiple_cattle(self):
@@ -264,9 +276,12 @@ class CattleSimulator:
         self.log("Three cows pass through the gate together", "SCENARIO")
 
         # Create sequences for 3 different tags
-        tag1_seq = self.rfid_reader.generate_approaching_sequence("E200001111111111", 4)
-        tag2_seq = self.rfid_reader.generate_approaching_sequence("E200002222222222", 4)
-        tag3_seq = self.rfid_reader.generate_approaching_sequence("E200003333333333", 3)
+        tag1_seq = self.rfid_reader.generate_approaching_sequence(
+            "E200001111111111", 4)
+        tag2_seq = self.rfid_reader.generate_approaching_sequence(
+            "E200002222222222", 4)
+        tag3_seq = self.rfid_reader.generate_approaching_sequence(
+            "E200003333333333", 3)
 
         # Interleave the sequences to simulate multiple cattle
         combined = []
@@ -280,7 +295,8 @@ class CattleSimulator:
             if i < len(tag3_seq):
                 combined.append(tag3_seq[i])
 
-        self.log(f"Generated {len(combined)} total readings for 3 cattle", "SCENARIO")
+        self.log(
+            f"Generated {len(combined)} total readings for 3 cattle", "SCENARIO")
 
         # Clear detector for new event
         self.direction_detector.clear_all()
@@ -307,7 +323,8 @@ class CattleSimulator:
                     # Hardware already logged the tag detection
                     all_readings.append(r)
                     # Add reading to student's direction detector
-                    self.direction_detector.add_reading(r.tag_id, r.rssi, r.timestamp)
+                    self.direction_detector.add_reading(
+                        r.tag_id, r.rssi, r.timestamp)
 
             scan_count += 1
             time.sleep(0.5)
@@ -323,7 +340,8 @@ class CattleSimulator:
         self.rfid_reader.power_off()
 
         # Process readings using student's stub classes
-        self._process_tags(all_readings, motion_start, motion_end, expected="3 ENTRY detections")
+        self._process_tags(all_readings, motion_start,
+                           motion_end, expected="3 ENTRY detections")
         print()
 
     def simulate_false_alarm(self):
@@ -356,7 +374,8 @@ class CattleSimulator:
                 for r in readings:
                     # Hardware already logged the tag detection (shouldn't happen)
                     all_readings.append(r)
-                    self.direction_detector.add_reading(r.tag_id, r.rssi, r.timestamp)
+                    self.direction_detector.add_reading(
+                        r.tag_id, r.rssi, r.timestamp)
             else:
                 self.log("No tags in range", "RFID-22")
 
@@ -371,8 +390,79 @@ class CattleSimulator:
         self.rfid_reader.power_off()
 
         # Process readings using student's stub classes
-        self._process_tags(all_readings, motion_start, motion_end, expected="No count updates")
+        self._process_tags(all_readings, motion_start,
+                           motion_end, expected="No count updates")
         print()
+
+    def process_tags_custom(self, readings, motion_start, motion_end, expected=None):
+        self.log("", "")
+        self.log("=== Custom Analysis ===", "RESULT")
+
+        if not readings:
+            self.log("No tags detected", "RESULT")
+            return
+
+        by_tag = {}
+        for r in readings:
+            if r.tag_id not in by_tag:
+                by_tag[r.tag_id] = []
+            by_tag[r.tag_id].append(r)
+
+        self.log(f"Processing {len(by_tag)} unique tag(s)", "RESULT")
+
+        for tag_id in by_tag.keys():
+            # Use your new logic here:
+            direction = self.my_custom_direction_logic(tag_id, by_tag[tag_id])
+
+            
+            # Update counts using student's CountManager (stub does nothing until implemented)
+            if direction == Direction.ENTRY:
+                self.count_manager.add_entry(count=1, tag_id=tag_id)
+                direction_str = "ENTRY"
+            elif direction == Direction.EXIT:
+                self.count_manager.add_exit(count=1, tag_id=tag_id)
+                direction_str = "EXIT"
+            else:
+                # For UNKNOWN, just track occurrence
+                direction_str = "UNKNOWN"
+
+            # Get occurrence count (stub returns 0 until implemented)
+            occurrence = self.count_manager.get_tag_occurrence_count(tag_id)
+
+            # Log using student's DataLogger (stub does nothing until implemented)
+            avg_rssi = sum(r.rssi for r in tag_readings) / len(tag_readings)
+            self.counts_logger.log_tag_detection(
+                tag_id=tag_id,
+                direction=direction_str,
+                rssi=avg_rssi,
+                occurrence_count=occurrence,
+                motion_start=motion_start,
+                motion_end=motion_end
+            )
+
+            self.log(
+                f"  Direction: {direction_str} (from student's DirectionDetector)", "RESULT")
+            self.log(
+                f"  Occurrence: {occurrence} (from student's CountManager)", "RESULT")
+
+        # Show current counts
+        count_data = self.count_manager.counts
+        self.log("", "RESULT")
+        self.log(f"Daily counts (from student's CountManager):", "RESULT")
+        self.log(f"  Entries: {count_data.daily_entry}", "RESULT")
+        self.log(f"  Exits: {count_data.daily_exit}", "RESULT")
+        self.log(f"  Net: {count_data.net_count}", "RESULT")
+
+        if expected:
+            self.log("", "EXPECTED")
+            self.log(f"Expected direction: {expected}", "EXPECTED")
+
+    # Example custom logic function:
+    def my_custom_direction_logic(self, tag_id, readings):
+        # Implement your new entry/exit logic here
+        # For example, use RSSI trends, tag occurrence, etc.
+        # Return "ENTRY" or "EXIT" as needed
+        pass
 
 
 def main():
@@ -398,7 +488,7 @@ def main():
 
     print()
     print("╔═══════════════════════════════════════════════════════════════╗")
-    print("║         Cattle Movement Simulator - Critter Counter           ║")
+    print("║         Cattle Movement Simulator - Critter Counter          ║")
     print("╚═══════════════════════════════════════════════════════════════╝")
     print()
 
